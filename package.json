@@ -1,0 +1,68 @@
+{
+  "name": "devopsexten",
+  "displayName": "DevOpsExten",
+  "description": "extension base",
+  "icon": "img/Chat_128.png",
+  "publisher": "DevOpsExten",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.89.0"
+  },
+  "categories": [ ],
+  "activationEvents": [
+    "chatVariableResolver"
+  ],
+  "main": "./out/extension",
+  "contributes": {
+    "commands": [
+      {
+        "command": "devopsexten.chat",
+        "title": "Perichat"
+      }
+    ],
+    "configuration": {
+      "title": "VSCode Chat Configuration",
+      "properties": {
+        "devopsexten.OPENAI_KEY": {
+          "type": "string",
+          "default": "1231232312",
+          "description": "API Key for OpenAI",
+          "scope": "resource"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "--enable-proposed-api":"Chatdevops.devopsexten",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^18.19.34",
+    "@types/vscode": "^1.89.0",
+    "@typescript-eslint/eslint-plugin": "^7.7.1",
+    "@typescript-eslint/parser": "^7.7.1",
+    "@vscode/test-cli": "^0.0.9",
+    "@vscode/test-electron": "^2.3.9",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/manuelrodriguezperiferia/ExtensionType.git"
+  },
+  "license": "License.txt",
+  "dependencies": {
+    "@langchain/core": "^0.2.6",
+    "@langchain/openai": "^0.1.2",
+    "hnswlib-node": "^3.0.0",
+    "langchain": "^0.0.207",
+    "prompt-sync": "^4.2.0",
+    "yarn": "^1.22.22"
+  }
+}
