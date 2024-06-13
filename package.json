@@ -8,7 +8,7 @@
   "engines": {
     "vscode": "^1.89.0"
   },
-  "categories": [ ],
+  "categories": [],
   "activationEvents": [
     "chatVariableResolver"
   ],
@@ -34,7 +34,7 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "--enable-proposed-api":"Chatdevops.devopsexten",
+    "--enable-proposed-api": "Chatdevops.devopsexten",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
@@ -54,7 +54,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/manuelrodriguezperiferia/ExtensionType.git"
+    "url": "https://github.com/manuelrodriguezperiferia/DevOpsExten.git"
   },
   "license": "License.txt",
   "dependencies": {
@@ -62,6 +62,7 @@
     "@langchain/openai": "^0.1.2",
     "hnswlib-node": "^3.0.0",
     "langchain": "^0.0.207",
+    "openai": "^4.51.0",
     "prompt-sync": "^4.2.0",
     "yarn": "^1.22.22"
   }

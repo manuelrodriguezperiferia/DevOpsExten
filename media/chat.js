@@ -5,7 +5,6 @@ const vscode = acquireVsCodeApi();
 
 sendButton.addEventListener('click', () => {
     const message = chatInput.value;
-
     // Append message to chat container
     const messageNode = document.createElement('div');
     messageNode.textContent = message;
@@ -15,11 +14,8 @@ sendButton.addEventListener('click', () => {
     vscode.postMessage({
         text: message
     });
-
-    // Clear input
     chatInput.value = '';
 });
-
 // Handle the message inside the webview
 window.addEventListener('message', event => {
     const message = event.data; // The JSON data our extension sent

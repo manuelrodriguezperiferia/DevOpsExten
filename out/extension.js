@@ -1,107 +1,143 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deactivate = exports.activate = void 0;
-const vscode = __importStar(require("vscode"));
+exports.deactivate = exports.OpenAIHandler = exports.activate = void 0;
+const vscode = require("vscode");
 const { ChatVectorDBQAChain } = require("langchain/chains");
 const { RecursiveCharacterTextSplitter } = require("langchain/text_splitter");
 const { HNSWLib } = require("@langchain/community/vectorstores/hnswlib");
-const { OpenAI } = require("@langchain/openai");
+const { OpenAIlan } = require("@langchain/openai");
 const { OpenAIEmbeddings } = require("@langchain/openai");
 //
+const SECRETS_STORE_KEY = "openai-api-key";
+const OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions";
+const OPENAI_MODEL = "gpt-3.5-turbo";
+//
 async function activate(context) {
-    //const ext = vscode.extensions.getExtension("publisher.extensionName");
-    //const myExtensionContext = await ext.activate();
-    const varext = context;
+    let currentPanel = undefined;
+    let chain;
     let disposable = vscode.commands.registerCommand('devopsexten.chat', async () => {
-        if (currentPanel) {
-            currentPanel.reveal(vscode.ViewColumn.One);
-        }
-        else {
-            currentPanel = vscode.window.createWebviewPanel('devopsexten', 'DevOps Chat', vscode.ViewColumn.Two, { enableScripts: true });
-        }
-        currentPanel.webview.html = getWebviewContent(currentPanel.webview);
-        // vscode.window.showInformationMessage('123....!');
-        currentPanel.onDidDispose(() => {
-            currentPanel = undefined;
-        }, undefined, context.subscriptions);
-        //
-        currentPanel.webview.onDidReceiveMessage(async (message) => {
-            const question = message.text; // "What does this file do?";
-            const res = await chain.call({ question: question, chat_history: [] });
-            if (currentPanel) {
-                currentPanel.webview.postMessage({ text: res["text"] });
-            }
+        //let currentPanel: vscode.WebviewPanel | undefined = undefined;
+        //let chain: any;
+        currentPanel = vscode.window.createWebviewPanel('devopsexten', 'Periferia-DevOps Chat', vscode.ViewColumn.Two, { enableScripts: true });
+        // ***********************
+        currentPanel.webview.html = getWebviewContent(currentPanel.webview, context);
+        // ************************+
+        // borra contenido para nuevas conversaciones
+        currentPanel.onDidDispose(() => { currentPanel = undefined; }, undefined, context.subscriptions);
+        currentPanel.webview.onDidReceiveMessage(message => {
+            const askQuest = new OpenAIHandler();
+            const ss = askQuest.askQuestionAboutCode();
+            currentPanel.webview.postMessage({ text: ss });
+            // const question = message.text; 
+            //const res = chain.call({ question: question, chat_history: [] });
+            //currentPanel.webview.postMessage({text: res["text"]  });
             return;
         }, undefined, context.subscriptions);
     });
-    const configuration = vscode.workspace.getConfiguration('');
-    const API_KEY = configuration.get("devopsexten.OPENAI_KEY", "c4173d51b0e44b0ab4ce28cb1a3d2d3");
-    if (API_KEY === "c4173d51b0e44b0ab4ce28cb1a3d2d3") {
-        vscode.window.showErrorMessage("Please set OPENAI_KEY in the configuration");
-        return;
-    }
-    //
-    const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
-    const model = new OpenAI({ openAIApiKey: API_KEY, temperature: 0.9 });
-    const embedder = new OpenAIEmbeddings({ openAIApiKey: API_KEY });
-    let currentPanel = undefined;
-    let chain;
-    const editor = vscode.window.activeTextEditor;
-    if (editor) {
-        let document = editor.document;
-        const documentText = document.getText();
-        const docs = textSplitter.createDocuments([documentText]);
-        const vectorStore = await HNSWLib.fromDocuments(docs, embedder);
-        chain = ChatVectorDBQAChain.fromLLM(model, vectorStore);
-    }
-    vscode.window.showInformationMessage('123....!');
-    context.subscriptions.push(disposable);
 }
 exports.activate = activate;
-function getWebviewContent(webview) {
-    // 
-    const vpath = "C:\\Users\\manuelrodriguez\\Documents\\9_OK_DEV\\devopsexten\\";
-    //const scriptUri = webview.asWebviewUri(vscode.Uri.arguments(context.extensionUri, 'media', 'chat.js'));
-    const styleMainUri = webview.asWebviewUri(vscode.Uri.arguments(vpath, 'media', 'style.css'));
+class OpenAIHandler {
+    openai;
+    if(question) {
+        const system_prompt = 'Eres un ingeniero de sistema';
+        const user_prompt = `{QUESTION}= ###${question}###\n {CODE}=###${this.getSelectedText()}###`;
+        const xresponse = this.callOpenAI(user_prompt, system_prompt, 100);
+        this.showOpenAIAnswer("response");
+    }
+    getSelectedText() {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            vscode.window.showInformationMessage('No file is currently open.');
+            return undefined;
+        }
+        return editor.selection.isEmpty
+            ? editor.document.getText()
+            : editor.document.getText(editor.selection);
+    }
+    async askQuestionAboutCode() {
+        const code = this.getSelectedText();
+        if (!code) {
+            vscode.window.showInformationMessage('Please select some code to ask about.');
+            return;
+        }
+        const question = await vscode.window.showInputBox({
+            prompt: "What would you like to ask about the selected code?"
+        });
+        if (question) {
+            try {
+                const system_prompt = 'Tu es un ingenieur informatique, l\'utilisateur te donne du CODE et une QUESTION. Ton but est de répondre au mieux à ça question en moins de 100 tokens. Pas de phrase inutile une explication profesionnel et concise.';
+                const user_prompt = `{QUESTION}= ###${question}###\n {CODE}=###${code}###`;
+                const response = await this.callOpenAI(user_prompt, system_prompt, 100);
+                this.showOpenAIAnswer(response);
+            }
+            catch (error) {
+                // this.outputChannel.appendLine(`Error when asking OpenAI: ${error}`);
+                vscode.window.showErrorMessage('An error occurred while asking the question.');
+            }
+        }
+    }
+    async callOpenAI(user_prompt, system_prompt, max_tokens) {
+        try {
+            console.log('==> Call OpenAI');
+            console.log(user_prompt);
+            vscode.window.showInformationMessage('Squid is thinking ...');
+            const stream = await this.openai.chat.completions.create({
+                model: "gpt-3.5-turbo",
+                messages: [
+                    { role: "system", content: system_prompt },
+                    { role: "user", content: `###${user_prompt}###` }
+                ],
+                temperature: 0,
+                max_tokens: max_tokens,
+                top_p: 1.0,
+                frequency_penalty: 0.0,
+                presence_penalty: 0.0,
+                stop: ["###"]
+            });
+            const content = stream.choices[0]?.message?.content;
+            return content !== null ? content : undefined;
+        }
+        catch (error) {
+            // this.outputChannel.appendLine(`API Error: ${error}`);
+            throw error;
+        }
+    }
+    showOpenAIAnswer(explanation) {
+        if (explanation) {
+            //outputChannel.appendLine('🐙 Squid 🐙');
+            //outputChannel.appendLine(explanation);
+            //outputChannel.show(true);            
+        }
+        else {
+            vscode.window.showInformationMessage('No explanation received from Squid.');
+        }
+    }
+}
+exports.OpenAIHandler = OpenAIHandler;
+// vscode.Uri.arguments;
+function getWebviewContent(webview, context) {
+    const fileScript = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'media', 'chat.js'));
+    const fileStyle = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'media', 'style.css'));
     return `<!DOCTYPE html>
 	<html>
 	<head>
 		<meta charset="UTF-8">
-		<title>VSCode Chat</title>
-		<link href="https://www.w3schools.com/" rel="stylesheet">
+		<title>123VSCode Chat</title>
+		<link href="${fileStyle}" rel="stylesheet">
 	</head>
 	<body>
 		<div id="chat-container"></div>
-		<input id="chat-input" type="text" placeholder="Type your message here..." onkeydown="if (event.keyCode == 13) document.getElementById('send-button').click()">
-		<button id="send-button">Send</button>
-		<script src="https://not-example.com/js/library.js"></script>
+		<input id="chat-input" type="text" placeholder="En que podemos ayudarte..." onkeydown="if (event.keyCode == 13) document.getElementById('send-button').click()">
+		<button id="send-button">Enviar</button>
+		<script src="${fileScript}"></script>
+		<p style="color:gray;font-family:Arial, sans-serif;font-size: 14px;"><b>Comandos:</b>
+        <br><b>Ctrl+F</b> = Mover ultima respuesta.</br>
+        <b>Ctrl+G</b> = Mover todas las respuestas.
+        <br><b>Ctrl+R</b> = Mover toda la conversacion.</br></p>
 	</body>
 	</html>`;
 }
-// This method is called when your extension is deactivated
+//
 function deactivate() { }
 exports.deactivate = deactivate;
 //# sourceMappingURL=extension.js.map
