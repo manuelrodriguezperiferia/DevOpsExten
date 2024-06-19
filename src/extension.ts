@@ -25,11 +25,11 @@ export async function activate(context: vscode.ExtensionContext) {
 	let currentPanel: vscode.WebviewPanel | undefined = undefined;
 	let chain: any;
 
-	let disposable = vscode.commands.registerCommand('devopsexten.chat', async () => {
+	let PeriChat = vscode.commands.registerCommand('chatdevopsperiai.chat', async () => {
 		//
 		currentPanel = vscode.window.createWebviewPanel
 		(
-			'devopsexten',
+			'chatdevopsperiai',
 			'Periferia-DevOps Chat',
 			vscode.ViewColumn.Two,{	enableScripts: true, retainContextWhenHidden: true	}
 		);
@@ -55,7 +55,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			);
 	});
 	
-	let Pasteresp = vscode.commands.registerCommand('devopsexten.pasteresp', async () => {
+	let Pasteresp = vscode.commands.registerCommand('chatdevopsperiai.pasteresp', async () => {
 		vscode.window.showInformationMessage('123....!');
 		vscode.commands.executeCommand("workbench.action.chat.open");
 		const editor = vscode.window.activeTextEditor;
@@ -104,7 +104,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		currentPanel.webview.postMessage({ text: StrResp});
 	}
 	context.subscriptions.push(Pasteresp);
-	//context.subscriptions.push(disposable);
+	context.subscriptions.push(PeriChat);
 }
 //
 //

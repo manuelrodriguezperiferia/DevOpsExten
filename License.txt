@@ -1,0 +1,7 @@
+Copyright (c) 2024 Periferia-it.com
+
+Licencia De Periferia IT
+
+Por la presente se autoriza el uso de esta extesion al personal tecnico y especializado de las areas
+de IT y se prohive a cualquier persona particular que obtenga una copia de este software o los archivos
+de la documentación de este producto.

@@ -25,7 +25,7 @@ class ChatGPTRequest {
 async function activate(context) {
     let currentPanel = undefined;
     let chain;
-    let PeriChat = vscode.commands.registerCommand('chatdevopsperiai.chat', async () => {
+    let disposable = vscode.commands.registerCommand('chatdevopsperiai.chat', async () => {
         //
         currentPanel = vscode.window.createWebviewPanel('chatdevopsperiai', 'Periferia-DevOps Chat', vscode.ViewColumn.Two, { enableScripts: true, retainContextWhenHidden: true });
         //
@@ -89,7 +89,7 @@ async function activate(context) {
         currentPanel.webview.postMessage({ text: StrResp });
     }
     context.subscriptions.push(Pasteresp);
-    context.subscriptions.push(PeriChat);
+    //context.subscriptions.push(disposable);
 }
 exports.activate = activate;
 //

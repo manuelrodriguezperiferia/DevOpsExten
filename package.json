@@ -1,16 +1,16 @@
 {
-  "name": "devopsexten",
-  "displayName": "DevOpsExten",
-  "description": "extension base",
+  "name": "chatdevopsperiai",
+  "displayName": "ChatDevOpsPeriAI",
+  "description": "Extension Chatbot OpenAI del area de DevOps [Periferia]",
   "icon": "img/Chat_128.png",
-  "publisher": "DevOpsExten",
+  "publisher": "ChatDevOpsPeriAI",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.89.0"
   },
   "categories": ["Other"],
   "activationEvents": [],
-  "main": "./out/extension",
+  "main": "./extension.js",
   "contributes": {
     "keybindings": [
       { "key": "ctrl+shift+o",
@@ -19,7 +19,7 @@
       },
       {
         "key": "ctrl+l",
-        "command": "devopsexten.pasteresp",
+        "command": "chatdevopsperiai.pasteresp",
         "when": "editorTextFocus"
       },
       {
@@ -31,16 +31,16 @@
     ],
     "commands": [
       {
-        "command": "devopsexten.chat",
-        "title": "Perichat"
+        "command": "chatdevopsperiai.chat",
+        "title": "Chat"
       }
     ],
     "configuration": {
       "title": "DevOps Chat Configuration",
       "properties": {
-        "devopsexten.OPENAI_KEY": {
+        "chatdevopsperiai.OPENAI_KEY": {
           "type": "string",
-          "default": "123",
+          "default": "S2sTL-231SW-2W3E-1s2s3",
           "description": "API Key for OpenAI",
           "scope": "resource"
         }
@@ -69,14 +69,13 @@
       "viewsWelcome": [
         {
           "view": "package-dependencies",
-          "contents": "Abrir una carpeta\n[Abrir Carpeta](command:vscode.openFolder)\nPara tener una conversacion interactiva con AI\n[ChatBot](command:devopsexten.chat)"
+          "contents": "Para abrir una carpeta o entorno de trabajo haga clic en esta boton:\n[Abrir Carpeta](command:vscode.openFolder)\nPara tener una conversacion interactiva con AI haga clic en esta boton:\n[ChatBot](command:chatdevopsperiai.chat)"
           
         }
       ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "--enable-proposed-api": "Chatdevops.devopsexten",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
