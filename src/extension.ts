@@ -1,179 +1,139 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
-const { ChatVectorDBQAChain } = require("langchain/chains");
-const { RecursiveCharacterTextSplitter } = require("langchain/text_splitter");
-const { HNSWLib } = require("@langchain/community/vectorstores/hnswlib");
-const { OpenAIlan } = require("@langchain/openai");
-const { OpenAIEmbeddings } = require ("@langchain/openai");
-import OpenAI from 'openai';
+import { OpenAIClient, AzureKeyCredential } from "@azure/openai";
 //
-const SECRETS_STORE_KEY = "openai-api-key";
-const OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions";
-const OPENAI_MODEL = "gpt-3.5-turbo";
+const SECRETS_STORE_KEY = "cc4173d51b0e44b0ab4ce28cb1a3d2d3";
+const OPENAI_ENDPOINT1 = "https://openaiperiferiatest.openai.azure.com/";
+const OPENAI_ENDPOINT = "https://openaiperiferiatest.openai.azure.com/openai/deployments/PeriferiAI/chat/completions?api-version=2023-03-15-preview&api-key=cc4173d51b0e44b0ab4ce28cb1a3d2d3";
+const OPENAI_MODEL = "PeriferiAI";
+//
+class ChatMessage {
+	role: string = "system";
+	content: string = "You are a helpful assistant";
+}
+const decoder = new TextDecoder("utf-8");
+let StrResp = '';
+class ChatGPTRequest {
+	user: string = "";
+	model: string = OPENAI_MODEL;
+	messages: ChatMessage[] = [];
+	temperature: number = 0.7;
+}
 
 //
 export async function activate(context: vscode.ExtensionContext) {
-
-
 
 	let currentPanel: vscode.WebviewPanel | undefined = undefined;
 	let chain: any;
 
 	let disposable = vscode.commands.registerCommand('devopsexten.chat', async () => {
-		//let currentPanel: vscode.WebviewPanel | undefined = undefined;
-		//let chain: any;
+		//
 		currentPanel = vscode.window.createWebviewPanel
 		(
 			'devopsexten',
 			'Periferia-DevOps Chat',
-			vscode.ViewColumn.Two,{	enableScripts: true	}
+			vscode.ViewColumn.Two,{	enableScripts: true, retainContextWhenHidden: true	}
 		);
-
-		// ***********************
-		
+		//
 		currentPanel.webview.html = getWebviewContent(currentPanel.webview, context);
-		// ************************+
-		// borra contenido para nuevas conversaciones
-		currentPanel.onDidDispose 
-		(
-			() =>	{ currentPanel = undefined;	},
+		//
+		currentPanel.onDidDispose(() =>	{ currentPanel = undefined; 	},
 			undefined,	context.subscriptions
 		);
-		
-		
-		
-		currentPanel.webview.onDidReceiveMessage( message =>  
-		{
-			const askQuest = new OpenAIHandler();
-			const ss = askQuest.askQuestionAboutCode();
-			
-			currentPanel.webview.postMessage({ text: ss });
-			// const question = message.text; 
-			//const res = chain.call({ question: question, chat_history: [] });
-			//currentPanel.webview.postMessage({text: res["text"]  });
-			return;
-		},undefined, context.subscriptions);
-		
-	});	
-
-
-
-}
-
-export class OpenAIHandler 
-{
-	private openai: OpenAI;
-	if (question) {
-		const system_prompt = 'Eres un ingeniero de sistema';
-		const user_prompt = `{QUESTION}= ###${question}###\n {CODE}=###${ this.getSelectedText()}###`;
-		const xresponse = this.callOpenAI(user_prompt, system_prompt, 100);
-		this.showOpenAIAnswer("response");
+		// ******************************************
+		context.subscriptions.push(	
+			currentPanel.webview.onDidReceiveMessage( message =>  
+				{
+					async progress => {
+						for (let i = 0; i < 10; ++i) {
+							debugger;
+							progress.report({ increment: 10 });
+							} 
+						};	
+					const ss:any = QuestionOpenAI(message.text);
+					return;
+				})
+			);
+	});
+	
+	let Pasteresp = vscode.commands.registerCommand('devopsexten.pasteresp', async () => {
+		vscode.window.showInformationMessage('123....!');
+		vscode.commands.executeCommand("workbench.action.chat.open");
+		const editor = vscode.window.activeTextEditor;
+		if (!editor) {
+			vscode.window.showInformationMessage("Debe seleccionar el documento !");
+		};
+		if (editor) {
+		const selection = editor.selection;
+		const selText = editor.document.getText(selection);
+		const answer = StrResp ;
+		const edit = new vscode.TextEdit(
+			new vscode.Range(selection.start, selection.start),
+			answer + "\n"
+		);
+		const workspaceEdit = new vscode.WorkspaceEdit();
+		workspaceEdit.set(editor.document.uri, [edit]);
+		vscode.workspace.applyEdit(workspaceEdit);
 		}
+	});
 
-
-
-
-
-	private getSelectedText(): string | undefined {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            vscode.window.showInformationMessage('No file is currently open.');
-            return undefined;
-        }
-        return editor.selection.isEmpty
-            ? editor.document.getText()
-            : editor.document.getText(editor.selection);
-    }
-
-    public async askQuestionAboutCode() {
-        const code = this.getSelectedText();
-        if (!code) {
-            vscode.window.showInformationMessage('Please select some code to ask about.');
-            return;
-        }
-
-        const question = await vscode.window.showInputBox({
-            prompt: "What would you like to ask about the selected code?"
-        });
-
-        if (question) {
-            try {
-                const system_prompt = 'Tu es un ingenieur informatique, l\'utilisateur te donne du CODE et une QUESTION. Ton but est de répondre au mieux à ça question en moins de 100 tokens. Pas de phrase inutile une explication profesionnel et concise.';
-                const user_prompt = `{QUESTION}= ###${question}###\n {CODE}=###${code}###`;
-                const response = await this.callOpenAI(user_prompt, system_prompt, 100);
-                this.showOpenAIAnswer(response);
-            } catch (error) {
-                // this.outputChannel.appendLine(`Error when asking OpenAI: ${error}`);
-                vscode.window.showErrorMessage('An error occurred while asking the question.');
-            }
-        }
-    }
-
-
-	private async callOpenAI(user_prompt: string, system_prompt: string, max_tokens: number): Promise<string | undefined> {
-        try {
-            console.log('==> Call OpenAI');
-            console.log(user_prompt);
-
-            vscode.window.showInformationMessage('Squid is thinking ...');
-        
-            const stream = await this.openai.chat.completions.create({
-                model: "gpt-3.5-turbo",
-                messages: [
-                    { role: "system", content: system_prompt },
-                    { role: "user", content: `###${user_prompt}###` }
-                ],
-                temperature: 0,
-                max_tokens: max_tokens,
-                top_p: 1.0,
-                frequency_penalty: 0.0,
-                presence_penalty: 0.0,
-                stop: ["###"]
-            });
-        
-            const content = stream.choices[0]?.message?.content;
-        
-            return content !== null ? content : undefined;        
-        } catch (error) {
-            // this.outputChannel.appendLine(`API Error: ${error}`);
-            throw error;
-        }
-    }
-
-	private showOpenAIAnswer(explanation: string | undefined): void {
-        if (explanation) {
-            //outputChannel.appendLine('🐙 Squid 🐙');
-            //outputChannel.appendLine(explanation);
-            //outputChannel.show(true);            
-        } else {
-            vscode.window.showInformationMessage('No explanation received from Squid.');
-        }
-    }
-
-
+	//
+	async function QuestionOpenAI(question: string){
+		//
+		const endpoint = process.env["ENDPOINT"] || "https://openaiperiferiatest.openai.azure.com/";
+		const azureApiKey = process.env["AZURE_API_KEY"] || "cc4173d51b0e44b0ab4ce28cb1a3d2d3";
+		const deploymentId = "HadaTech";
+		//
+		const client = new OpenAIClient(endpoint, new AzureKeyCredential(azureApiKey));
+		//
+		const events:any = await client.streamChatCompletions(
+			deploymentId,[
+				{ role: "system", content: "Eres un chatbot amigable que brindas solo código en diferentes lenguaje de programación." },
+				{ role: "user", content: question }, ], { maxTokens: 1550 },
+			);
+		//
+		let coll_mens = [];
+		for await (const event of events ) {
+			for (const choice of event.choices) {
+				StrResp += choice.delta?.content;
+				coll_mens.push(choice.delta?.content);  
+			}
+		}
+		//
+		StrResp = StrResp.replace(",","").replace("undefined","");
+		//
+		currentPanel.webview.postMessage({ text: StrResp});
+	}
+	context.subscriptions.push(Pasteresp);
+	//context.subscriptions.push(disposable);
 }
-
-// vscode.Uri.arguments;
-
+//
+//
 function getWebviewContent(webview: vscode.Webview , context: vscode.ExtensionContext) {
-	const fileScript = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'media', 'chat.js'));
-	const fileStyle = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'media', 'style.css'));
+	const fileScript = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'source', 'actions.js'));
+	const fileStyle = webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'source', 'style.css'));
 	return `<!DOCTYPE html>
 	<html>
 	<head>
 		<meta charset="UTF-8">
-		<title>123VSCode Chat</title>
+		<title>Periferia Chatbot</title>
 		<link href="${fileStyle}" rel="stylesheet">
 	</head>
 	<body>
 		<div id="chat-container"></div>
+		<progress id="pro-bar" style="height:40px"></progress>
 		<input id="chat-input" type="text" placeholder="En que podemos ayudarte..." onkeydown="if (event.keyCode == 13) document.getElementById('send-button').click()">
-		<button id="send-button">Enviar</button>
+		<br><button id="send-button">Enviar</button>
 		<script src="${fileScript}"></script>
 		<p style="color:gray;font-family:Arial, sans-serif;font-size: 14px;"><b>Comandos:</b>
-        <br><b>Ctrl+F</b> = Mover ultima respuesta.</br>
-        <b>Ctrl+G</b> = Mover todas las respuestas.
-        <br><b>Ctrl+R</b> = Mover toda la conversacion.</br></p>
+        <br><b>Ctrl + L</b> = Mover ultima respuesta.</br>
+        <b>Ctrl + Shift + L</b> = Mover todas las respuestas.
+		<script type="text/javascript">
+			function onLoadFunctions() {
+			const progbar = document.getElementById('pro-bar');
+			progbar.style.display = 'none';   	
+			}
+			window.onload = onLoadFunctions;
+		</script>
 	</body>
 	</html>`;
 }

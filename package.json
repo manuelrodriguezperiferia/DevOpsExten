@@ -8,12 +8,27 @@
   "engines": {
     "vscode": "^1.89.0"
   },
-  "categories": [],
-  "activationEvents": [
-    "chatVariableResolver"
-  ],
+  "categories": ["Other"],
+  "activationEvents": [],
   "main": "./out/extension",
   "contributes": {
+    "keybindings": [
+      { "key": "ctrl+shift+o",
+        "command": "editor.action.deleteLines",
+        "when": "editorTextFocus" 
+      },
+      {
+        "key": "ctrl+l",
+        "command": "devopsexten.pasteresp",
+        "when": "editorTextFocus"
+      },
+      {
+        
+        "key": "ctrl+shift+l",
+        "command": "editor.action.deleteLines",
+        "when": "editorTextFocus"
+      }
+    ],
     "commands": [
       {
         "command": "devopsexten.chat",
@@ -21,16 +36,43 @@
       }
     ],
     "configuration": {
-      "title": "VSCode Chat Configuration",
+      "title": "DevOps Chat Configuration",
       "properties": {
         "devopsexten.OPENAI_KEY": {
           "type": "string",
-          "default": "1231232312",
+          "default": "123",
           "description": "API Key for OpenAI",
           "scope": "resource"
         }
       }
-    }
+    },
+    "viewsContainers":{
+      "activitybar":[
+        {
+        "id":"package-devops",
+        "title":"Chatbot DevOps",
+        "icon":"img/chat_small.svg"
+        }]
+      },
+      "views":{
+        "package-devops":[{
+          "name":"sesion-dependencies",
+          "id": "package-dependencies",
+          "title":"Dependencies"
+        },{
+          "name":"sesion-outline",
+          "id": "package-outline",
+          "title":"Outline"
+        }
+      ]
+      },
+      "viewsWelcome": [
+        {
+          "view": "package-dependencies",
+          "contents": "Abrir una carpeta\n[Abrir Carpeta](command:vscode.openFolder)\nPara tener una conversacion interactiva con AI\n[ChatBot](command:devopsexten.chat)"
+          
+        }
+      ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -58,12 +100,16 @@
   },
   "license": "License.txt",
   "dependencies": {
+    "@azure/openai": "^1.0.0-beta.12",
     "@langchain/core": "^0.2.6",
     "@langchain/openai": "^0.1.2",
+    "ai": "^3.2.0",
+    "axios": "^1.7.2",
     "hnswlib-node": "^3.0.0",
     "langchain": "^0.0.207",
     "openai": "^4.51.0",
     "prompt-sync": "^4.2.0",
+    "rxjs": "^7.8.1",
     "yarn": "^1.22.22"
   }
 }

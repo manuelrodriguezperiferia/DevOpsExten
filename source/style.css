@@ -1,0 +1,74 @@
+/* Set the font and background color for the entire page */
+body {
+font-family: Arial, sans-serif;
+background-color: #f2f2f2;
+}
+
+/* Style the chat container */
+#chat-container {
+height: 400px;
+width: 400px;
+border: 1px solid #ddd;
+border-radius: 5px;
+padding: 10px;
+margin-bottom: 10px;
+overflow-y: scroll;
+background-color: #fff;
+}
+
+/* Style each chat message. Make the text black */
+#chat-container div {
+margin-bottom: 10px;
+padding: 5px;
+border: 1px solid #ddd;
+border-radius: 5px;
+color: #000;
+}
+
+/* Style the chat input field */
+#chat-input {
+width: 400px;
+padding: 10px;
+border: none;
+border-top: 1px solid #ddd;
+border-bottom: 1px solid #ddd;
+border-radius: 5px;
+margin-bottom: 10px;
+font-size: 14px;
+}
+
+/* Style the send button */
+#send-button {
+background-color: #008CBA;
+color: #fff;
+border: none;
+border-radius: 5px;
+padding: 10px;
+font-size: 16px;
+cursor: pointer;
+}
+
+/* Style the send button on hover */
+#send-button:hover {
+background-color: #006f8b;}
+
+
+/* --- progress bar  --- */
+.wrapper{  
+    width:500px;  
+    margin:0 auto;  
+    }  
+.progress-bar{  
+    width:100%;  
+    background-color:#e0e0e0;  
+    padding:3px;  
+    border-radius:3px;  
+    }  
+.progress-bar-fill{  
+    height:50px;  
+    display:block;  
+    background-color:#33cc33;  
+    border-radius:3px;  
+    width:0;  
+    transition: width 500ms ease-in-out;  
+    }  
